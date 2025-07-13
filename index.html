@@ -1,14 +1,279 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Stereo Soundboard</title>
   <style>
-    /* Apple-style UI CSS and layout definitions... */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+      padding: 20px;
+      background: #f5f5f7;
+      margin: 0;
+    }
+    #add-btn {
+      background: #007aff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    #add-btn:hover {
+      background: #005bbb;
+    }
+    .grid-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .block {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 16px;
+      width: 280px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .block input {
+      font-family: inherit;
+    }
+    .name-display, .hotkey-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .filename {
+      font-size: 13px;
+      color: #007aff;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .file-label {
+      background: #e5e5ea;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .play-btn {
+      background: #007aff;
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+    .play-btn:hover {
+      background: #005bbb;
+    }
+    .delete-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    .delete-btn svg, .save-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+    .save-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    #dialog {
+      display: none;
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      width: 420px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    #dialog label {
+      font-size: 15px;
+      font-weight: 500;
+      display: block;
+      margin-top: 16px;
+    }
+    #dialog input[type="text"], #dialog input[type="file"] {
+      margin-top: 6px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #dialog button {
+      margin-top: 20px;
+      font-size: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #dialog .save {
+      background: #007aff;
+      color: white;
+    }
+    #dialog .cancel {
+      background: #d1d1d6;
+      color: #000;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
-  <!-- Stereo Soundboard layout and scripts go here -->
+  <button id="add-btn" onclick="showDialog()">Add Sound</button>
+  <div class="grid-container" id="button-grid"></div>
+
+  <div id="dialog">
+    <h3 style="margin-top:0">Add Sound</h3>
+    <label>Name:<input type="text" id="name-input"></label>
+    <label>Hotkey:<input type="text" id="hotkey-input" maxlength="1"></label>
+    <label>Left Sound:<input type="file" id="left-file" accept="audio/*"></label>
+    <label>Right Sound:<input type="file" id="right-file" accept="audio/*"></label>
+    <button class="save" onclick="saveSound()">Save</button>
+    <button class="cancel" onclick="hideDialog()">Cancel</button>
+  </div>
+
+  <script>
+    function showDialog() {
+      document.getElementById('dialog').style.display = 'block';
+    }
+    function hideDialog() {
+      document.getElementById('dialog').style.display = 'none';
+    }
+
+    function saveSound() {
+      const name = document.getElementById('name-input').value || 'Untitled';
+      const hotkey = document.getElementById('hotkey-input').value.toLowerCase();
+      const leftFile = document.getElementById('left-file').files[0];
+      const rightFile = document.getElementById('right-file').files[0];
+
+      if (!leftFile && !rightFile) return;
+
+      const block = document.createElement('div');
+      block.className = 'block';
+
+      const nameRow = document.createElement('div');
+      nameRow.className = 'name-display';
+      const nameInput = document.createElement('input');
+      nameInput.value = name;
+      nameRow.appendChild(nameInput);
+      block.appendChild(nameRow);
+
+      const hotkeyRow = document.createElement('div');
+      hotkeyRow.className = 'hotkey-display';
+      const hotkeyText = document.createElement('span');
+      hotkeyText.innerHTML = `<span style="color:#007aff; cursor:pointer">Hotkey: ${hotkey}</span>`;
+      const hotkeyEdit = document.createElement('input');
+      hotkeyEdit.type = 'text';
+      hotkeyEdit.maxLength = 1;
+      hotkeyEdit.style.display = 'none';
+      const saveKeyBtn = document.createElement('button');
+      saveKeyBtn.className = 'save-btn';
+      saveKeyBtn.innerHTML = `<svg viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M6 9C6 7.34315 7.34315 6 9 6H34.2814L42 13.2065V39C42 40.6569 40.6569 42 39 42H9C7.34315 42 6 40.6569 6 39V9Z' stroke='#333' stroke-width='4' stroke-linejoin='round'/><path d='M24.0083 6L24 13.3846C24 13.7245 23.5523 14 23 14H15C14.4477 14 14 13.7245 14 13.3846L14 6H24.0083Z' stroke='#333' stroke-width='4' stroke-linejoin='round'/><path d='M9 6H34.2814' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 26H34' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><path d='M14 34H24.0083' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>`;
+      saveKeyBtn.style.display = 'none';
+
+      saveKeyBtn.onclick = () => {
+        hotkeyText.innerHTML = `<span style=\"color:#007aff\">Hotkey: ${hotkeyEdit.value}</span>`;
+        hotkeyEdit.style.display = 'none';
+        saveKeyBtn.style.display = 'none';
+        currentKey = hotkeyEdit.value.toLowerCase();
+      };
+      hotkeyText.onclick = () => {
+        hotkeyEdit.style.display = 'inline-block';
+        saveKeyBtn.style.display = 'inline-block';
+      };
+
+      hotkeyRow.appendChild(hotkeyText);
+      hotkeyRow.appendChild(hotkeyEdit);
+      hotkeyRow.appendChild(saveKeyBtn);
+      block.appendChild(hotkeyRow);
+
+      const audioL = new Audio(leftFile ? URL.createObjectURL(leftFile) : '');
+      const audioR = new Audio(rightFile ? URL.createObjectURL(rightFile) : '');
+
+      const fileLeft = document.createElement('div');
+      fileLeft.innerHTML = `Replace Left <span class='filename'>${leftFile?.name || ''}</span>`;
+      fileLeft.querySelector('.filename').onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/*';
+        input.onchange = () => {
+          const newFile = input.files[0];
+          audioL.src = URL.createObjectURL(newFile);
+          fileLeft.querySelector('.filename').textContent = newFile.name;
+        };
+        input.click();
+      };
+      block.appendChild(fileLeft);
+
+      const fileRight = document.createElement('div');
+      fileRight.innerHTML = `Replace Right <span class='filename'>${rightFile?.name || ''}</span>`;
+      fileRight.querySelector('.filename').onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/*';
+        input.onchange = () => {
+          const newFile = input.files[0];
+          audioR.src = URL.createObjectURL(newFile);
+          fileRight.querySelector('.filename').textContent = newFile.name;
+        };
+        input.click();
+      };
+      block.appendChild(fileRight);
+
+      const playBtn = document.createElement('button');
+      playBtn.className = 'play-btn';
+      playBtn.textContent = '▶';
+      block.appendChild(playBtn);
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.innerHTML = `<svg viewBox='0 0 48 48' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M9 10V44H39V10H9Z' stroke='#333' stroke-width='4' stroke-linejoin='round'/><path d='M20 20V33' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><path d='M28 20V33' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><path d='M4 10H44' stroke='#333' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/><path d='M16 10L19.289 4H28.7771L32 10H16Z' stroke='#333' stroke-width='4' stroke-linejoin='round'/></svg>`;
+      deleteBtn.onclick = () => block.remove();
+      block.appendChild(deleteBtn);
+
+      let currentKey = hotkey;
+      let isPlaying = false;
+      playBtn.onclick = () => {
+        if (!isPlaying) {
+          audioL.currentTime = 0;
+          audioR.currentTime = 0;
+          audioL.play();
+          audioR.play();
+        } else {
+          audioL.pause();
+          audioR.pause();
+        }
+        isPlaying = !isPlaying;
+      };
+
+      document.addEventListener('keydown', e => {
+        if (e.key.toLowerCase() === currentKey) {
+          playBtn.click();
+        }
+      });
+
+      document.getElementById('button-grid').appendChild(block);
+      hideDialog();
+    }
+  </script>
 </body>
 </html>
